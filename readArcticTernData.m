@@ -27,7 +27,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Load Data
-file = 'C:\Users\Faizan\Documents\Academics\Research_Greg\Data\Animal Telemetry Network\request_2234_user_1025_dataset_739_20170922.csv';
+file = 'request_2234_user_1025_dataset_739_20170922.csv';
 fid = fopen(file);
 seabirdData = textscan(fid, '%d %s %s %s %s %s %s %s %s %s %s %s %s %s %f %f %f', 'headerlines', 1);
 relevantData = seabirdData{1,6};
@@ -40,6 +40,7 @@ dateData = strings(numEntries,1);%zeros(numEntries,1);
 timeData = strings(numEntries,1);
 latitudeData = zeros(numEntries,1);
 longitudeData = zeros(numEntries,1);
+datetimeData = strings(numEntries,1);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,7 +91,9 @@ for i = 1:numEntries
         tempLongitude = [tempLongitude useArray(j) ];
     end
     longitudeData(i) = str2double(tempLongitude);
-    
+   % datetimeData(i) =[dateData(i) timeData(i)];
+   
+   datetimeData(i) =strcat(dateData(i), " ", timeData(i));
 end
 colony_longitudeData = str2double(c_lon);
 colony_latitudeData = str2double(c_lat);
@@ -138,15 +141,22 @@ date = strings(numEntries,count_individuals);
 time = strings(numEntries,count_individuals);
 latitude = zeros(numEntries,count_individuals);
 longitude = zeros(numEntries,count_individuals);
-
+datetime = strings(numEntries,count_individuals);
 %Date format
 %https://www.mathworks.com/help/matlab/ref/datenum.html
 formatIn = 'yyyy-mm-dd';
+formatDateTime = 'yyyy-mm-dd HH:MM:SS';
+
+%store the number of entires in for each individual
+
+numSteps = zeros(1,count_individuals);
 
 
 %Individualize Data
 for L = 1:(count_individuals)
     if L < count_individuals
+        numSteps(1, L) = individuals(L+1,2) - individuals(L,2);
+
         for pos = individuals(L,2):individuals(L + 1 ,2) - 1
             pos_normalized = pos - individuals(L,2) + 1;
             latitude(pos_normalized,L) = latitudeData(pos);
@@ -154,27 +164,124 @@ for L = 1:(count_individuals)
             longitude(pos_normalized,L) = longitudeData(pos);
             time(pos_normalized,L) = timeData(pos);
             date(pos_normalized,L) = datenum(dateData(pos),formatIn);
-            
+            datetime(pos_normalized,L) = datenum(datetimeData(pos),formatDateTime);
         end
     end
     if L == count_individuals
+        numSteps(1, L) = numEntries - individuals(L,2);
+
         for pos = individuals(L,2):numEntries
             pos_normalized = pos - individuals(L,2) + 1;
             latitude(pos_normalized,L) = latitudeData(pos);
             longitude(pos_normalized,L) = longitudeData(pos);
             time(pos_normalized,L) = timeData(pos);
             date(pos_normalized,L) = datenum(dateData(pos),formatIn);
-            
+            datetime(pos_normalized,L) = datenum(datetimeData(pos),formatDateTime);
         end
     end
 end
 
 
-% plot different trajectories
+
+
+%Calculate timesteps and step sizes
+timesteps = zeros(numEntries,count_individuals);
+stepsize = zeros(numEntries,count_individuals);
+for num = 1:numEntries
+    for individualno = 1:count_individuals
+        if num < numSteps(1 , individualno)
+            stepsize(num,individualno) = sqrt((latitude(num + 1,individualno) - latitude(num,individualno))^2 +(longitude(num + 1,individualno) - longitude(num,individualno))^2);
+            %  timestep(num,individualno) = str2double(datetime(num,individualno)-datetime(num,individualno));
+        elseif num >= numSteps(1 , individualno)
+            stepsize(num ,individualno) = 0/0;
+        end
+    end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Statistics&&&&&&&&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Ergodicity
+%Is the time average of a single individual the same as the ensemble
+%average of just one timestep?
+meanIndividualStepSize = nanmean(stepsize(:,1))
+meanEnsembleSingleStep = mean(stepsize(1,:))
+
+ensembleAverageAllTimes = zeros(400,1);
+
+%All ensemble means
+
+for t = 1:400
+ensembleAverageAllTimes(t) = nanmean(stepsize(t,:));
+ 
+end
+
+%ensembleAverageAllTimes(:) = ensembleAverageAllTimes(:)';
+%mean of ensemble means
+ meanOfEnsembleMeans = mean(ensembleAverageAllTimes(:))
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Plot Individual Data%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%Plot Hisograms of step sizes
 for plotnum = 1:count_individuals
     figure(plotnum);
+    hist(stepsize(:,plotnum),round(numSteps(1,plotnum)));
+    
+    plotnumString = string(plotnum);
+    titleString = [ 'Histogram of Individual' plotnumString];
+    title(titleString);
+    xlim([0 150]);
+    ylim([0 50])
+end
+close(1:count_individuals)
+
+% plot different trajectories
+for plotnum = 1:count_individuals
+    figure(plotnum + count_individuals);
+    plotnumString = string(plotnum );
+    titleString = [ 'Trajectory of individual' plotnumString];
+    title(titleString);
     plot(colony_longitudeData , colony_latitudeData , 'b*');
     hold on;
     plot(longitude(:,plotnum), latitude(:,plotnum), 'r--o');
     
 end
+close(count_individuals: 2*count_individuals)
+
+
+%close(1: 3*count_individuals)
+
+%
+
+
+
+%Histogram of Ensemble Means
+figure(plotnum + 1);
+histogram(ensembleAverageAllTimes(:), 20);
+title('Histogram of Ensemble Means For All Times');
+%close(plotnum + 1);
+
+%plot time series of Ensemble means
+figure(plotnum + 2);
+for t = 1:400
+plot(t,ensembleAverageAllTimes(t,1), 'r-');
+title('Ensemble Mean vs Time');
+hold on
+ 
+end
+
+
+% for t=1:340
+% plot(longitude(t,1),latitude(t,1), 'r--');
+% hold on
+% 
+% end
+
