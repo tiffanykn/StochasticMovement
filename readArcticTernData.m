@@ -4,7 +4,7 @@
 %2) Find a way to load in the lat and lon max and min
 %3) Set axis min and max
 %4) Ask if using "datenum" functio is allowed
-%
+%5) Ask if nanmean() is allowed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -219,6 +219,8 @@ end
 %average of just one timestep?
 meanIndividualStepSize = nanmean(stepsize(:,1))
 meanEnsembleSingleStep = mean(stepsize(1,:))
+distFromColony = zeros(400,count_individuals);
+distFromOrigin= zeros(400,count_individuals);
 
 ensembleAverageAllTimes = zeros(400,1);
 
@@ -234,6 +236,32 @@ end
  meanOfEnsembleMeans = mean(ensembleAverageAllTimes(:))
 
 
+%Distance from colony lat lon
+for num = 1:numEntries
+    for individualno = 1:count_individuals
+        if num < numSteps(1 , individualno)
+            distFromColony(num,individualno) = sqrt((latitude(num + 1,individualno) - c_lat)^2 +(longitude(num + 1,individualno) - c_lon)^2);
+            %  timestep(num,individualno) = str2double(datetime(num,individualno)-datetime(num,individualno));
+        elseif num >= numSteps(1 , individualno)
+            distFromColony(num ,individualno) = 0/0;
+        end
+    end
+end
+
+
+
+%Distance from origin
+
+for num = 1:numEntries
+    for individualno = 1:count_individuals
+        if num < numSteps(1 , individualno)
+            distFromOrigin(num,individualno) = sqrt((latitude(num + 1,individualno) - latitude(1,individualno))^2 +(longitude(num + 1,individualno) - longitude(1,individualno))^2);
+            %  timestep(num,individualno) = str2double(datetime(num,individualno)-datetime(num,individualno));
+        elseif num >= numSteps(1 , individualno)
+            distFromOrigin(num ,individualno) = 0/0;
+        end
+    end
+end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
