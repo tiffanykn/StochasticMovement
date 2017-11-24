@@ -33,13 +33,8 @@ seabirdData = textscan(fid, '%d %s %s %s %s %s %s %s %s %s %s %s %s %s %f %f %f'
 relevantData = seabirdData{1,6};
 numEntries = length(relevantData);
 
-%emptyArray = [];
-%colony_lat = [emptyArray, emptyArray*10]; %zeros(1,numEntries);
-%useArray = relevantData{1};
 
 %Initialize Variables
-%colony_latitudeData = zeros(numEntries,1);
-%colony_longitudeData = zeros(numEntries,1);
 trackIDData = zeros(numEntries,1);
 dateData = strings(numEntries,1);%zeros(numEntries,1);
 timeData = strings(numEntries,1);
@@ -175,27 +170,11 @@ for L = 1:(count_individuals)
 end
 
 
-% for k = 1:numEntries
-%     for l = 1:numEntries
-%         if
-%
-%
-%
-%         end
-%     end
-% end
-%
-
-%for i = 1:10
-
 % plot different trajectories
-for plotnum = 1:2 % count_individuals
+for plotnum = 1:count_individuals
     figure(plotnum);
     plot(colony_longitudeData , colony_latitudeData , 'b*');
     hold on;
     plot(longitude(:,plotnum), latitude(:,plotnum), 'r--o');
     
 end
- %   hold on
-    
-%end
