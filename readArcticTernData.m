@@ -181,6 +181,17 @@ for L = 1:(count_individuals)
     end
 end
 
+%Properly organize them chronically
+for ind = 1:count_individuals
+    for t = 1:numSteps(1,t)
+        
+        
+        
+    end
+    
+end
+
+
 
 
 
