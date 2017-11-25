@@ -33,6 +33,9 @@ seabirdData = textscan(fid, '%d %s %s %s %s %s %s %s %s %s %s %s %s %s %f %f %f'
 relevantData = seabirdData{1,6};
 numEntries = length(relevantData);
 
+%load coast lines data
+load('coastlines.mat');
+
 
 %Initialize Variables
 trackIDData = zeros(numEntries,1);
@@ -139,9 +142,14 @@ colony_longitude = zeros(numEntries,count_individuals);
 trackID = zeros(numEntries,count_individuals);
 date = strings(numEntries,count_individuals);
 time = strings(numEntries,count_individuals);
-latitude = zeros(numEntries,count_individuals);
-longitude = zeros(numEntries,count_individuals);
+latitude = zeros(numEntries,2,count_individuals);
+longitude = zeros(numEntries,2,count_individuals);
 datetime = strings(numEntries,count_individuals);
+
+chronologicalLongitude = zeros(size(longitude));
+chronologicalLatitude = zeros(size(latitude));
+
+
 %Date format
 %https://www.mathworks.com/help/matlab/ref/datenum.html
 formatIn = 'yyyy-mm-dd';
@@ -159,12 +167,15 @@ for L = 1:(count_individuals)
 
         for pos = individuals(L,2):individuals(L + 1 ,2) - 1
             pos_normalized = pos - individuals(L,2) + 1;
-            latitude(pos_normalized,L) = latitudeData(pos);
+            latitude(pos_normalized,1,L) = latitudeData(pos);
             
-            longitude(pos_normalized,L) = longitudeData(pos);
+            longitude(pos_normalized,1,L) = longitudeData(pos);
             time(pos_normalized,L) = timeData(pos);
             date(pos_normalized,L) = datenum(dateData(pos),formatIn);
             datetime(pos_normalized,L) = datenum(datetimeData(pos),formatDateTime);
+            latitude(pos_normalized,2,L) = datetime(pos_normalized,L);
+            longitude(pos_normalized,2,L) = datetime(pos_normalized,L);
+            
         end
     end
     if L == count_individuals
@@ -172,15 +183,48 @@ for L = 1:(count_individuals)
 
         for pos = individuals(L,2):numEntries
             pos_normalized = pos - individuals(L,2) + 1;
-            latitude(pos_normalized,L) = latitudeData(pos);
-            longitude(pos_normalized,L) = longitudeData(pos);
+            latitude(pos_normalized,1,L) = latitudeData(pos);
+            longitude(pos_normalized,1,L) = longitudeData(pos);
             time(pos_normalized,L) = timeData(pos);
             date(pos_normalized,L) = datenum(dateData(pos),formatIn);
             datetime(pos_normalized,L) = datenum(datetimeData(pos),formatDateTime);
+            latitude(pos_normalized,2,L) = datetime(pos_normalized,L);
+            longitude(pos_normalized,2,L) = datetime(pos_normalized,L);
+            
         end
     end
+chronologicalLongitude = sort(longitude,3);
+chronologicalLatitude = sort(latitude,3);
+    
 end
 
+datetime = str2double(datetime);
+%chronologicalDateTime = zeros(size(datetime));
+
+timeMax = zeros(1,2,count_individuals); %(max value(1) matrix rowlocation(2) matrix collocation(3) individual id);
+timeMin = zeros(1,2,count_individuals); %(min value(1) matrix rowlocation(2) matrix collocation(3)individual id);
+
+
+
+%Properly organize them chronically
+
+% for ind = 1:count_individuals
+%     timeMax(1,1,ind) = max(datetime(:,ind));
+%     timeMin(1,1,ind) = min(datetime(:,ind));
+%    % [timeMax(1,2,ind) timeMax(1,3,ind)] = find(datetime(:,ind) == max(datetime(:,ind)));
+%     %[timeMin(1,2,ind) timeMin(1,3,ind)] = find(datetime(:,ind) == min(datetime(:,ind)));
+%     timeMax(1,2,ind) = find(datetime(:,ind) == max(datetime(:,ind)));
+%     timeMin(1,2,ind) = find(datetime(:,ind) == min(datetime(:,ind)));
+%     chronologicalDateTime(1,ind) = timeMin(1,1,ind);
+%     chronologicalDateTime(end,ind) = timeMin(1,1,ind);
+% 
+%     for t = 1:numSteps(1,ind)
+%         
+%         
+%         
+%     end
+%     
+% end
 
 
 
@@ -229,32 +273,62 @@ end
 %Plot Individual Data%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%***********PLOT 1***************************
+% % %Plot Hisograms of step sizes
+% for plotnum = 1:count_individuals
+%     figure(plotnum);
+%     hist(stepsize(:,plotnum),round(numSteps(1,plotnum)));
+%     
+%     plotnumString = string(plotnum);
+%     titleString = [ 'Histogram of Individual' plotnumString];
+%     title(titleString);
+%     xlim([0 150]);
+%     ylim([0 50])
+% end
+% % close(1:count_individuals)
+% 
 
-%Plot Hisograms of step sizes
-for plotnum = 1:count_individuals
-    figure(plotnum);
-    hist(stepsize(:,plotnum),round(numSteps(1,plotnum)));
+
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul','Aug' ,'Sep' ,'Oct', 'Nov', 'Dec'];
+month30days = [ 4,6,9,11];
+month31days = [ 1,3,5,7,8,10,12];
+oddcounter = 1;
+
+%***********PLOT 2***************************
+% plot monthly trajectories for individual 1
     
-    plotnumString = string(plotnum);
-    titleString = [ 'Histogram of Individual' plotnumString];
+for figurenum = 2:13
+    
+    figure(figurenum);
+    titleString = months(figurenum);
     title(titleString);
-    xlim([0 150]);
-    ylim([0 50])
-end
-close(1:count_individuals)
-
-% plot different trajectories
-for plotnum = 1:count_individuals
-    figure(plotnum + count_individuals);
-    plotnumString = string(plotnum );
-    titleString = [ 'Trajectory of individual' plotnumString];
-    title(titleString);
+    
     plot(colony_longitudeData , colony_latitudeData , 'b*');
     hold on;
-    plot(longitude(:,plotnum), latitude(:,plotnum), 'r--o');
+    plot(coastlon - 180 ,coastlat, '-k');
+    xlim([ -180 180]);
+    ylim([ -90 90]);
     
-end
-close(count_individuals: 2*count_individuals)
+    
+    plot(chronologicalLongitude(((figurenum - 1)*30:(figurenum)*30),1,2), chronologicalLatitude(((figurenum - 1)*30:(figurenum)*30),1,2), '-*',  'Color', 'g','MarkerSize', 1, 'MarkerEdgeColor','r');
+end    
+    % close(count_individuals: 2*count_individuals)
+
+%***********PLOT 3***************************
+% %Entire Trajectories for all 
+% for plotnum = 1:count_individuals
+%     figure(plotnum + count_individuals);
+%     plotnumString = string(plotnum );
+%     titleString = [ 'Trajectory of individual' plotnumString];
+%     title(titleString);
+%     plot(colony_longitudeData , colony_latitudeData , 'b*');
+%     hold on;
+%     plot(chronologicalLongitude(:,1,plotnum), chronologicalLatitude(:,1,plotnum), '-*',  'Color', 'g','MarkerSize', 1, 'MarkerEdgeColor','r');
+%     plot(coastlon - 180 ,coastlat, '-k');
+% xlim([ -180 180]);
+% ylim([ -90 90]);
+% end
+% % close(count_individuals: 2*count_individuals)
 
 
 %close(1: 3*count_individuals)
@@ -263,21 +337,28 @@ close(count_individuals: 2*count_individuals)
 
 
 
-%Histogram of Ensemble Means
-figure(plotnum + 1);
-histogram(ensembleAverageAllTimes(:), 20);
-title('Histogram of Ensemble Means For All Times');
-%close(plotnum + 1);
+% %Histogram of Ensemble Means
+% figure(plotnum + count_individuals + 1);
+% histogram(ensembleAverageAllTimes(:), 20);
+% title('Histogram of Ensemble Means For All Times');
+% close(plotnum +  count_individuals + 1);
+% 
+% %plot time series of Ensemble means
+% figure(plotnum + count_individuals + 2);
+% for t = 1:400
+% plot(t,ensembleAverageAllTimes(t,1), 'r-');
+% title('Ensemble Mean vs Time');
+% hold on
+%  
+% end
 
-%plot time series of Ensemble means
-figure(plotnum + 2);
-for t = 1:400
-plot(t,ensembleAverageAllTimes(t,1), 'r-');
-title('Ensemble Mean vs Time');
-hold on
- 
-end
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%IGNORE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%STUFF%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%BELOW%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%THIS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%LINE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % for t=1:340
 % plot(longitude(t,1),latitude(t,1), 'r--');
@@ -285,3 +366,20 @@ end
 % 
 % end
 
+% % % % for figurenum = 1:12
+% % % %     figure(figurenum);        
+% % % %     titleString = months(figurenum);
+% % % %     title(titleString);
+% % % % 
+% % % %     plot(colony_longitudeData , colony_latitudeData , 'b*');
+% % % %     hold on;
+% % % %     plot(coastlon - 180 ,coastlat, '-k');
+% % % %     xlim([ -180 180]);
+% % % %     ylim([ -90 90]);
+% % % %     
+% % % %     if figurenum ~= 2
+% % % %         for day = 1:30
+% % % %             plot(chronologicalLongitude((day + (figurenum - 1)*30),1,2), chronologicalLatitude((day + (figurenum - 1)*30),1,2), 'r--.');
+% % % %         end
+% % % %     end
+% % % % end
