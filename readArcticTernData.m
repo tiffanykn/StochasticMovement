@@ -197,8 +197,6 @@ chronologicalLongitude = sort(longitude,3);
 chronologicalLatitude = sort(latitude,3);
     
 end
-
-<<<<<<< HEAD
 datetime = str2double(datetime);
 %chronologicalDateTime = zeros(size(datetime));
 
@@ -226,19 +224,17 @@ timeMin = zeros(1,2,count_individuals); %(min value(1) matrix rowlocation(2) mat
 %     end
 %     
 % end
-=======
 %Properly organize them chronically
-for ind = 1:count_individuals
-    for t = 1:numSteps(1,t)
-        
-        
-        
-    end
-    
-end
+% for ind = 1:count_individuals
+%     for t = 1:numSteps(1,t)
+%         
+%         
+%         
+%     end
+%     
+% end
 
 
->>>>>>> fe6bdb9a3a9dd0f9fd54d96b9048fff2ce0141cc
 
 
 
