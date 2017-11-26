@@ -4,7 +4,7 @@
 %2) Find a way to load in the lat and lon max and min
 %3) Set axis min and max
 %4) Ask if using "datenum" functio is allowed
-%5) Ask if nanmean() is allowed
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -197,6 +197,7 @@ chronologicalLongitude = sort(longitude,3);
 chronologicalLatitude = sort(latitude,3);
     
 end
+
 datetime = str2double(datetime);
 %chronologicalDateTime = zeros(size(datetime));
 
@@ -224,17 +225,6 @@ timeMin = zeros(1,2,count_individuals); %(min value(1) matrix rowlocation(2) mat
 %     end
 %     
 % end
-%Properly organize them chronically
-% for ind = 1:count_individuals
-%     for t = 1:numSteps(1,t)
-%         
-%         
-%         
-%     end
-%     
-% end
-
-
 
 
 
@@ -262,8 +252,6 @@ end
 %average of just one timestep?
 meanIndividualStepSize = nanmean(stepsize(:,1))
 meanEnsembleSingleStep = mean(stepsize(1,:))
-distFromColony = zeros(400,count_individuals);
-distFromOrigin= zeros(400,count_individuals);
 
 ensembleAverageAllTimes = zeros(400,1);
 
@@ -279,32 +267,6 @@ end
  meanOfEnsembleMeans = mean(ensembleAverageAllTimes(:))
 
 
-%Distance from colony lat lon
-for num = 1:numEntries
-    for individualno = 1:count_individuals
-        if num < numSteps(1 , individualno)
-            distFromColony(num,individualno) = sqrt((latitude(num + 1,individualno) - c_lat)^2 +(longitude(num + 1,individualno) - c_lon)^2);
-            %  timestep(num,individualno) = str2double(datetime(num,individualno)-datetime(num,individualno));
-        elseif num >= numSteps(1 , individualno)
-            distFromColony(num ,individualno) = 0/0;
-        end
-    end
-end
-
-
-
-%Distance from origin
-
-for num = 1:numEntries
-    for individualno = 1:count_individuals
-        if num < numSteps(1 , individualno)
-            distFromOrigin(num,individualno) = sqrt((latitude(num + 1,individualno) - latitude(1,individualno))^2 +(longitude(num + 1,individualno) - longitude(1,individualno))^2);
-            %  timestep(num,individualno) = str2double(datetime(num,individualno)-datetime(num,individualno));
-        elseif num >= numSteps(1 , individualno)
-            distFromOrigin(num ,individualno) = 0/0;
-        end
-    end
-end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -335,7 +297,7 @@ oddcounter = 1;
 %***********PLOT 2***************************
 % plot monthly trajectories for individual 1
     
-for figurenum = 2:13
+for figurenum = 1:8
     
     figure(figurenum);
     titleString = months(figurenum);
@@ -347,9 +309,12 @@ for figurenum = 2:13
     xlim([ -180 180]);
     ylim([ -90 90]);
     
-    
-    plot(chronologicalLongitude(((figurenum - 1)*30:(figurenum)*30),1,2), chronologicalLatitude(((figurenum - 1)*30:(figurenum)*30),1,2), '-*',  'Color', 'g','MarkerSize', 1, 'MarkerEdgeColor','r');
-end    
+if figurenum == 1
+    plot(chronologicalLongitude((1:(figurenum)*60),1,2), chronologicalLatitude((1:(figurenum)*60),1,2), '-*',  'Color', 'g','MarkerSize', 1, 'MarkerEdgeColor','r');
+else    
+    plot(chronologicalLongitude(((figurenum - 1)*60:(figurenum)*60),1,2), chronologicalLatitude(((figurenum - 1)*60:(figurenum)*60),1,2), '-*',  'Color', 'g','MarkerSize', 1, 'MarkerEdgeColor','r');
+end 
+end
     % close(count_individuals: 2*count_individuals)
 
 %***********PLOT 3***************************
